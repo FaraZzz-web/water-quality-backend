@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.Customizer;
 
 @Configuration
 public class SecurityConfig {
@@ -16,31 +17,32 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable()) // API ke liye CSRF disable karna zaroori hai
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login").permitAll() // Login page sabke liye khula hai
-                        .anyRequest().permitAll() // Abhi ke liye baaki sab open rakha hai, next step mein lock karenge!
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .anyRequest().permitAll()
                 );
         return http.build();
     }
-    // 👇 2. YAHAN CORS KI SETTINGS BATA 👇
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Tera React Frontend ka URL
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        // 🚨 IMPORTANT: Yahan exact URLs daalna zaroori hai jab Credentials true hon
+        configuration.setAllowedOrigins(Arrays.asList(
+                "https://water-quality-anomaly-detector-razh28ewg-farazzz-webs-projects.vercel.app",
+                "http://localhost:5173" // Local testing ke liye
+        ));
 
-        // OPTIONS method ko allow karna sabse zaroori hai preflight ke liye
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // Authorization aur Content-Type headers ko allow kar
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        // Saare headers allow kar dete hain taaki JWT token mein dikkat na aaye
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With"));
 
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Ye setting poore project (/**) par lagu hogi
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
