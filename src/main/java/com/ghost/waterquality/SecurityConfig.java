@@ -3,14 +3,14 @@ package com.ghost.waterquality;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
@@ -31,24 +31,26 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 🚨 IMPORTANT: Yahan exact URLs daalna zaroori hai jab Credentials true hon
-        configuration.setAllowedOrigins(Arrays.asList(
-                "https://water-quality-anomaly-detector-razh28ewg-farazzz-webs-projects.vercel.app",
-                "http://localhost:5173" // Local testing ke liye
+        // 🚨 FIX: Origin Patterns use kar rahe hain taaki Vercel ke saare
+        // dynamic links (preview links) automatically allow ho jayein.
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "https://*.vercel.app",
+                "http://localhost:[*]"
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // Saare headers allow kar dete hain taaki JWT token mein dikkat na aaye
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With"));
+        // Saare headers allow kar rahe hain taaki JWT aur Content-Type mein koi panga na ho
+        configuration.setAllowedHeaders(Arrays.asList("*"));
 
+        // Credentials ko true rakhna zaroori hai agar tum cookies ya auth headers use kar rahe ho
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-    // Class ke andar ye naya bean add kar de
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
